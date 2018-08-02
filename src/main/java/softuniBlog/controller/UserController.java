@@ -15,12 +15,16 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import softuniBlog.bindingModel.UserBindingModel;
+import softuniBlog.entity.Article;
 import softuniBlog.entity.Role;
 import softuniBlog.entity.User;
+import softuniBlog.repository.ArticleRepository;
 import softuniBlog.repository.RoleRepository;
 import softuniBlog.repository.UserRepository;
 
 import javax.servlet.http.HttpServletResponse;
+import java.util.List;
+import java.util.Set;
 
 @Controller
 public class UserController {
@@ -29,7 +33,7 @@ public class UserController {
     RoleRepository roleRepository;
     @Autowired
     UserRepository userRepository;
-
+	
     @GetMapping("/register")
     public String register(Model model) {
         model.addAttribute("view", "user/register");
@@ -82,6 +86,7 @@ public class UserController {
     @GetMapping("/profile")
     @PreAuthorize("isAuthenticated()")
     public String profilePage(Model model){
+       
         UserDetails principal = (UserDetails) SecurityContextHolder.getContext()
                 .getAuthentication()
                 .getPrincipal();
@@ -93,5 +98,21 @@ public class UserController {
 
         return "base-layout";
     }
+	
+	@GetMapping("/myarticles")
+	@PreAuthorize("isAuthenticated()")
+	public String myArticlesPage(Model model){
+		
+		UserDetails principal = (UserDetails) SecurityContextHolder.getContext()
+				.getAuthentication()
+				.getPrincipal();
+		
+		User user = this.userRepository.findByEmail(principal.getUsername());
+		Set<Article> articles = user.getArticles();
+		model.addAttribute("articles", articles);
+		model.addAttribute("view", "user/myArticles");
+		
+		return "base-layout";
+	}
 }
 

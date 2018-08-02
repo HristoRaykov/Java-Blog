@@ -27,22 +27,22 @@ public class ArticleController {
 	
 	@GetMapping("/article/create")
 	@PreAuthorize("isAuthenticated()")
-	public String create(Model model){
+	public String create(Model model) {
 		
-		model.addAttribute("view","article/create");
+		model.addAttribute("view", "article/create");
 		
 		return "base-layout";
 	}
 	
 	@PostMapping("/article/create")
 	@PreAuthorize("isAuthenticated()")
-	public String createProcess(ArticleBindingModel articleBindingModel){
+	public String createProcess(ArticleBindingModel articleBindingModel) {
 		
 		UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 		
 		User author = userRepository.findByEmail(userDetails.getUsername());
 		
-		Article article = new Article(articleBindingModel.getTitle(),articleBindingModel.getContent(),author);
+		Article article = new Article(articleBindingModel.getTitle(), articleBindingModel.getContent(), author);
 		
 		articleRepository.saveAndFlush(article);
 		
@@ -50,41 +50,53 @@ public class ArticleController {
 	}
 	
 	@GetMapping("/article/{id}")
-	public String details(Model model, @PathVariable Integer id){
+	public String details(Model model, @PathVariable Integer id) {
 		
-		if (!articleRepository.exists(id)){
+		if (!articleRepository.exists(id)) {
 			return "redirect:/";
 		}
 		
 		Article article = articleRepository.findOne(id);
 		
-		model.addAttribute("article",article);
-		model.addAttribute("view","article/details");
+		model.addAttribute("article", article);
+		model.addAttribute("view", "article/details");
 		
 		return "base-layout";
 	}
 	
 	@GetMapping("/article/edit/{id}")
 	@PreAuthorize("isAuthenticated()")
-	public String editShowForm(Model model, @PathVariable Integer id){
+	public String editShowForm(Model model, @PathVariable Integer id) {
 		
-		if (!articleRepository.exists(id)){
+		if (!articleRepository.findOne(id).isCurrentUserAuthor()) {
+			model.addAttribute("errorMsg", "No authority");
+			model.addAttribute("view", "error/message");
+			return "base-layout";
+		}
+		
+		if (!articleRepository.exists(id)) {
 			return "redirect:/";
 		}
 		
 		Article article = articleRepository.findOne(id);
 		
-		model.addAttribute("article",article);
-		model.addAttribute("view","article/edit");
+		model.addAttribute("article", article);
+		model.addAttribute("view", "article/edit");
 		
 		return "base-layout";
+		
 	}
 	
 	@PostMapping("/article/edit/{id}")
 	@PreAuthorize("isAuthenticated()")
-	public String editAction(ArticleBindingModel articleBindingModel, @PathVariable Integer id){
+	public String editAction(ArticleBindingModel articleBindingModel, @PathVariable Integer id,Model model) {
 		
-		if (!articleRepository.exists(id)){
+		if (!articleRepository.findOne(id).isCurrentUserAuthor()) {
+			model.addAttribute("errorMsg", "No authority");
+			model.addAttribute("view", "error/message");
+			return "base-layout";
+		}
+		if (!articleRepository.exists(id)) {
 			return "redirect:/";
 		}
 		
@@ -95,30 +107,38 @@ public class ArticleController {
 		
 		articleRepository.saveAndFlush(article);
 		
-		return "redirect:/article/"+article.getId();
+		return "redirect:/article/" + article.getId();
 	}
 	
 	@GetMapping("/article/delete/{id}")
 	@PreAuthorize("isAuthenticated()")
-	public String deleteShowForm(Model model, @PathVariable Integer id){
-		
-		if (!articleRepository.exists(id)){
+	public String deleteShowForm(Model model, @PathVariable Integer id) {
+		if (!articleRepository.findOne(id).isCurrentUserAuthor()) {
+			model.addAttribute("errorMsg", "No authority");
+			model.addAttribute("view", "error/message");
+			return "base-layout";
+		}
+		if (!articleRepository.exists(id)) {
 			return "redirect:/";
 		}
 		
 		Article article = articleRepository.findOne(id);
 		
-		model.addAttribute("article",article);
-		model.addAttribute("view","article/delete");
+		model.addAttribute("article", article);
+		model.addAttribute("view", "article/delete");
 		
 		return "base-layout";
 	}
 	
 	@PostMapping("/article/delete/{id}")
 	@PreAuthorize("isAuthenticated()")
-	public String deleteAction(@PathVariable Integer id){
-		
-		if (!articleRepository.exists(id)){
+	public String deleteAction(@PathVariable Integer id,Model model) {
+		if (!articleRepository.findOne(id).isCurrentUserAuthor()) {
+			model.addAttribute("errorMsg", "No authority");
+			model.addAttribute("view", "error/message");
+			return "base-layout";
+		}
+		if (!articleRepository.exists(id)) {
 			return "redirect:/";
 		}
 		

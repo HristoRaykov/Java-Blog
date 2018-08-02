@@ -1,5 +1,8 @@
 package softuniBlog.entity;
 
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+
 import javax.persistence.*;
 
 @Entity
@@ -68,6 +71,12 @@ public class Article {
 			len = 50;
 		}
 		return this.getContent().substring(0,len)+"...";
+	}
+	
+	@Transient
+	public boolean isCurrentUserAuthor(){
+		UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+		return this.author.getEmail().equals(userDetails.getUsername());
 	}
 	
 }
